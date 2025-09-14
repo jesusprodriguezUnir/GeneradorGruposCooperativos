@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Student, Constraint } from '../types';
-import { StudentCard } from './StudentCard';
-import { Save, Upload, Plus, Trash2 } from 'lucide-react';
+import { GroupCard } from './GroupCard';
+import { Save, Upload } from 'lucide-react';
 
 interface ConfigurationPanelProps {
   students: Student[];
@@ -9,7 +9,8 @@ interface ConfigurationPanelProps {
   onStudentsChange: (students: Student[]) => void;
   onConstraintsChange: (constraints: Constraint[]) => void;
   onSaveConfig: (name: string) => void;
-  onLoadConfig: (config: any) => void;
+  onLoadConfig: (config: import('../types').Configuration) => void;
+  groups?: import('../types').Group[];
 }
 
 export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
@@ -18,12 +19,13 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   onStudentsChange,
   onConstraintsChange,
   onSaveConfig,
-  onLoadConfig
+  onLoadConfig,
+  groups
 }) => {
   const [activeTab, setActiveTab] = useState<'students' | 'constraints'>('students');
   const [configName, setConfigName] = useState('');
 
-  const handleStudentChange = (id: number, field: keyof Student, value: any) => {
+  const handleStudentChange = (id: number, field: keyof Student, value: string | boolean | number | number[]) => {
     const updatedStudents = students.map(student =>
       student.id === id ? { ...student, [field]: value } : student
     );
@@ -45,7 +47,7 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
         try {
           const config = JSON.parse(e.target?.result as string);
           onLoadConfig(config);
-        } catch (error) {
+        } catch {
           alert('Error al cargar el archivo JSON');
         }
       };
@@ -54,7 +56,7 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
+  <div className="bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Configuración</h2>
         <div className="flex gap-3">
@@ -120,81 +122,100 @@ export const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
       {activeTab === 'students' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {students.map(student => (
-              <div key={student.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nombre
-                    </label>
-                    <input
-                      type="text"
-                      value={student.name}
-                      onChange={(e) => handleStudentChange(student.id, 'name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                  </div>
-                  
-                  <div className="flex gap-4">
+            {students.map(student => {
+              const studentColors = [
+                'bg-gradient-to-r from-pink-100 via-purple-50 to-blue-100',
+                'bg-gradient-to-r from-blue-100 via-indigo-50 to-teal-100',
+                'bg-gradient-to-r from-green-100 via-teal-50 to-blue-50',
+                'bg-gradient-to-r from-yellow-100 via-orange-50 to-pink-50',
+                'bg-gradient-to-r from-purple-100 via-pink-50 to-blue-50',
+                'bg-gradient-to-r from-red-100 via-pink-50 to-yellow-50',
+              ];
+              const idx = students.findIndex(s => s.id === student.id);
+              const colorClass = studentColors[idx % studentColors.length];
+              return (
+                <div key={student.id} className={`border border-gray-200 rounded-lg p-4 shadow-lg ${colorClass}`}>
+                  <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Género
+                        Nombre
                       </label>
-                      <select
-                        value={student.gender}
-                        onChange={(e) => handleStudentChange(student.id, 'gender', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-                      >
-                        <option value="male">Niño</option>
-                        <option value="female">Niña</option>
-                      </select>
+                      <input
+                        type="text"
+                        value={student.name}
+                        onChange={(e) => handleStudentChange(student.id, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white/80"
+                      />
+                    </div>
+                    <div className="flex gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Género
+                        </label>
+                        <select
+                          value={student.gender}
+                          onChange={(e) => handleStudentChange(student.id, 'gender', e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white/80"
+                        >
+                          <option value="male">Niño</option>
+                          <option value="female">Niña</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={student.isLeader}
+                          onChange={(e) => handleStudentChange(student.id, 'isLeader', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-bold text-yellow-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-2 py-1 rounded-full shadow">Líder</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={student.needsHelp}
+                          onChange={(e) => handleStudentChange(student.id, 'needsHelp', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm font-bold text-blue-900 bg-gradient-to-r from-blue-200 to-blue-400 px-2 py-1 rounded-full shadow">Necesita ayuda</span>
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Preferencias (IDs separados por comas)
+                      </label>
+                      <input
+                        type="text"
+                        value={student.preferences.join(', ')}
+                        onChange={(e) => {
+                          const prefs = e.target.value
+                            .split(',')
+                            .map(p => parseInt(p.trim()))
+                            .filter(p => !isNaN(p));
+                          handleStudentChange(student.id, 'preferences', prefs);
+                        }}
+                        placeholder="ej: 1, 5, 12"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-white/80"
+                      />
                     </div>
                   </div>
-
-                  <div className="flex gap-4">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={student.isLeader}
-                        onChange={(e) => handleStudentChange(student.id, 'isLeader', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm">Líder</span>
-                    </label>
-                    
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={student.needsHelp}
-                        onChange={(e) => handleStudentChange(student.id, 'needsHelp', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm">Necesita ayuda</span>
-                    </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Preferencias (IDs separados por comas)
-                    </label>
-                    <input
-                      type="text"
-                      value={student.preferences.join(', ')}
-                      onChange={(e) => {
-                        const prefs = e.target.value
-                          .split(',')
-                          .map(p => parseInt(p.trim()))
-                          .filter(p => !isNaN(p));
-                        handleStudentChange(student.id, 'preferences', prefs);
-                      }}
-                      placeholder="ej: 1, 5, 12"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    />
-                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+          {/* Vista previa de grupos generados */}
+          {groups && groups.length > 0 && (
+            <div className="mt-10">
+              <h3 className="text-xl font-bold text-purple-700 mb-4">Vista previa de grupos generados</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {groups.map(group => (
+                  <GroupCard key={group.id} group={group} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

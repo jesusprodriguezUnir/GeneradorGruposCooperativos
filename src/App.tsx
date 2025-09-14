@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Student, Constraint, Group, Configuration } from './types';
 import { initialStudents, initialConstraints } from './data/initialData';
 import { GroupGenerator } from './utils/groupGenerator';
 import { ConfigurationPanel } from './components/ConfigurationPanel';
 import { GroupCard } from './components/GroupCard';
-import { Users, Settings, Play, Download, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Users, Settings, Play, RefreshCw, AlertTriangle } from 'lucide-react';
 
 function App() {
   const [students, setStudents] = useState<Student[]>(initialStudents);
@@ -66,44 +66,57 @@ function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div className="min-h-screen bg-gradient-to-br from-pink-200 via-blue-100 to-indigo-200 relative animate-gradient-x">
+      {/* Overlay de carga colorido */}
+      {isGenerating && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-pink-400 via-purple-400 to-blue-400 bg-opacity-90 animate-fadeIn">
+          <div className="mb-8">
+            <svg className="animate-spin h-16 w-16 text-white drop-shadow-lg" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="white" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-2 drop-shadow-lg animate-pulse">Generando grupos...</h2>
+          <p className="text-lg text-white/80 mb-4 animate-fadeIn">¡Un momento! Estamos creando la mejor combinación posible.</p>
+        </div>
+      )}
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+          <h1 className="text-5xl font-extrabold text-gray-900 drop-shadow-lg mb-2 animate-fadeIn">
             Generador Grupos Cooperativos
           </h1>
-          <p className="text-gray-600">
+          <p className="text-lg text-gray-700 font-medium animate-fadeIn">
             Organiza automáticamente 24 estudiantes en 6 grupos de 4 personas
           </p>
         </div>
 
         {/* Navigation */}
         <div className="flex justify-center mb-8">
-          <div className="bg-white rounded-lg p-1 shadow-md">
+          <div className="bg-gradient-to-r from-pink-100 via-purple-100 to-blue-100 rounded-lg p-1 shadow-xl border border-purple-200">
             <button
               onClick={() => setActiveView('config')}
-              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 text-lg shadow-lg ${
                 activeView === 'config'
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-gray-800 text-white scale-105'
+                  : 'text-gray-700 hover:text-gray-900 bg-white'
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-5 h-5" />
               Configuración
             </button>
             <button
               onClick={() => groups && setActiveView('groups')}
               disabled={!groups}
-              className={`px-6 py-3 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 text-lg shadow-lg ${
                 activeView === 'groups' && groups
-                  ? 'bg-blue-600 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white scale-105'
                   : groups
-                  ? 'text-gray-600 hover:text-gray-800'
-                  : 'text-gray-400 cursor-not-allowed'
+                  ? 'text-blue-700 hover:text-purple-600 bg-white'
+                  : 'text-gray-400 cursor-not-allowed bg-white'
               }`}
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-5 h-5" />
               Grupos Generados
             </button>
           </div>
