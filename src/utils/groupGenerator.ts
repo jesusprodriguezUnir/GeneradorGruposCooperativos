@@ -47,16 +47,53 @@ export class GroupGenerator {
       students: []
     }));
 
-    // Paso 1: Asignar líderes a cada grupo
-    // Nota: Si hay más grupos que líderes disponibles, solo los primeros grupos tendrán líder.
-    // Por ejemplo, con 24 estudiantes y groupSize=2, habrá 12 grupos pero solo 6 líderes,
-    // lo que resultará en que solo la mitad de los grupos tengan líder asignado.
+    // Paso 1: Asignar líderes
     const shuffledLeaders = [...this.leaders].sort(() => Math.random() - 0.5);
-    shuffledLeaders.forEach((leader, index) => {
-      if (index < numGroups) {
-        groups[index].students.push(leader);
+    
+    for (const leader of shuffledLeaders) {
+      // Intentar colocar al líder en un grupo que ya tenga a alguien con quien DEBA estar
+      const mustBeWith = this.constraints
+        .filter(c => c.type === 'must_be_together' && c.students.includes(leader.id))
+        .flatMap(c => c.students)
+        .filter(id => id !== leader.id);
+
+      let assigned = false;
+      
+      // 1. Buscar grupo con su pareja obligatoria
+      for (const group of groups) {
+        if (group.students.some(s => mustBeWith.includes(s.id))) {
+          if (group.students.length < this.groupSize && this.canAddStudentToGroup(leader, group, groups)) {
+            group.students.push(leader);
+            assigned = true;
+            break;
+          }
+        }
       }
-    });
+
+      // 2. Si no, buscar grupo vacío (para mantener distribución)
+      if (!assigned) {
+        for (const group of groups) {
+          if (group.students.length === 0 && this.canAddStudentToGroup(leader, group, groups)) {
+            group.students.push(leader);
+            assigned = true;
+            break;
+          }
+        }
+      }
+
+      // 3. Si no, buscar cualquier grupo con espacio
+      if (!assigned) {
+        for (const group of groups) {
+          if (group.students.length < this.groupSize && this.canAddStudentToGroup(leader, group, groups)) {
+            group.students.push(leader);
+            assigned = true;
+            break;
+          }
+        }
+      }
+
+      if (!assigned) return groups; // Devolver incompleto para reintentar
+    }
 
     // Paso 2: Crear lista de estudiantes restantes
     const remainingStudents = this.students.filter(s => !s.isLeader);
