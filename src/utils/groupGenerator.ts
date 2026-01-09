@@ -4,12 +4,14 @@ export class GroupGenerator {
   private students: Student[];
   private constraints: Constraint[];
   private leaders: Student[];
+  private groupSize: number;
   private maxAttempts = 1000;
 
-  constructor(students: Student[], constraints: Constraint[]) {
+  constructor(students: Student[], constraints: Constraint[], groupSize: number = 4) {
     this.students = students;
     this.constraints = constraints.filter(c => c.enabled);
     this.leaders = students.filter(s => s.isLeader);
+    this.groupSize = groupSize;
   }
 
   generateGroups(): Group[] | null {
@@ -23,8 +25,10 @@ export class GroupGenerator {
   }
 
   private attemptGeneration(): Group[] {
-    // Inicializar 6 grupos
-    const groups: Group[] = Array.from({ length: 6 }, (_, i) => ({
+    const numGroups = Math.ceil(this.students.length / this.groupSize);
+    
+    // Inicializar grupos
+    const groups: Group[] = Array.from({ length: numGroups }, (_, i) => ({
       id: i + 1,
       students: []
     }));
@@ -32,7 +36,7 @@ export class GroupGenerator {
     // Paso 1: Asignar líderes a cada grupo
     const shuffledLeaders = [...this.leaders].sort(() => Math.random() - 0.5);
     shuffledLeaders.forEach((leader, index) => {
-      if (index < 6) {
+      if (index < numGroups) {
         groups[index].students.push(leader);
       }
     });
@@ -44,7 +48,7 @@ export class GroupGenerator {
     // Paso 3: Asignar estudiantes restantes
     for (const student of shuffledRemaining) {
       const bestGroup = this.findBestGroupForStudent(student, groups);
-      if (bestGroup && bestGroup.students.length < 4) {
+      if (bestGroup && bestGroup.students.length < this.groupSize) {
         bestGroup.students.push(student);
       } else {
         // Si no se puede asignar, devolver null para intentar de nuevo
@@ -58,7 +62,7 @@ export class GroupGenerator {
   private findBestGroupForStudent(student: Student, groups: Group[]): Group | null {
     // Encontrar grupos válidos (que no violen restricciones)
     const validGroups = groups.filter(group => 
-      group.students.length < 4 && this.canAddStudentToGroup(student, group, groups)
+      group.students.length < this.groupSize && this.canAddStudentToGroup(student, group, groups)
     );
 
     if (validGroups.length === 0) return null;
@@ -123,10 +127,10 @@ export class GroupGenerator {
           const has2 = group.some(s => s.id === id2);
           // Si uno está presente, el otro también debe estar o poder estar
           if (has1 && !has2) {
-            return group.length < 4; // Aún hay espacio para el segundo
+            return group.length < this.groupSize; // Aún hay espacio para el segundo
           }
           if (has2 && !has1) {
-            return group.length < 4; // Aún hay espacio para el primero
+            return group.length < this.groupSize; // Aún hay espacio para el primero
           }
         }
         return true;
@@ -156,8 +160,17 @@ export class GroupGenerator {
   }
 
   private validateGroups(groups: Group[]): boolean {
-    // Verificar que todos los grupos tengan exactamente 4 estudiantes
-    if (groups.some(g => g.students.length !== 4)) {
+    // Verificar que todos los grupos tengan el tamaño correcto (o menos si no es divisible)
+    const totalStudents = this.students.length;
+    const expectedStudentsPerGroup = this.groupSize;
+    
+    if (groups.some(g => g.students.length > expectedStudentsPerGroup)) {
+      return false;
+    }
+
+    // Verificar que se hayan asignado todos los estudiantes
+    const assignedCount = groups.reduce((acc, g) => acc + g.students.length, 0);
+    if (assignedCount !== totalStudents) {
       return false;
     }
 
