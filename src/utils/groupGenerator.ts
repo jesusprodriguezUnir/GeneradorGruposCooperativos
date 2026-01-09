@@ -6,6 +6,7 @@ export class GroupGenerator {
   private leaders: Student[];
   private groupSize: number;
   private maxAttempts = 1000;
+  private static readonly DEFAULT_GROUP_SIZE = 4;
 
   constructor(students: Student[], constraints: Constraint[], groupSize: number = 4) {
     this.students = students;
@@ -14,11 +15,11 @@ export class GroupGenerator {
     
     // Validate and normalize groupSize to avoid invalid values (0, negative, non-integer, or > number of students)
     const totalStudents = this.students.length;
-    let normalizedGroupSize = Number.isFinite(groupSize) ? Math.floor(groupSize) : 4;
+    let normalizedGroupSize = Number.isFinite(groupSize) ? Math.floor(groupSize) : GroupGenerator.DEFAULT_GROUP_SIZE;
 
     if (normalizedGroupSize < 1) {
       // Ensure at least one student per group when there are students; default to 1 otherwise
-      normalizedGroupSize = totalStudents > 0 ? Math.min(4, totalStudents) : 1;
+      normalizedGroupSize = totalStudents > 0 ? Math.min(GroupGenerator.DEFAULT_GROUP_SIZE, totalStudents) : 1;
     } else if (totalStudents > 0 && normalizedGroupSize > totalStudents) {
       // Do not allow groupSize to exceed the total number of students
       normalizedGroupSize = totalStudents;
@@ -179,9 +180,7 @@ export class GroupGenerator {
     const totalStudents = this.students.length;
     
     // Verificar que todos los grupos tengan el tamaño correcto (o menos si no es divisible)
-    const expectedStudentsPerGroup = this.groupSize;
-    
-    if (groups.some(g => g.students.length > expectedStudentsPerGroup)) {
+    if (groups.some(g => g.students.length > this.groupSize)) {
       return false;
     }
 
