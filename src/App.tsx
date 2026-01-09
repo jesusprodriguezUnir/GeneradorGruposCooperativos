@@ -13,22 +13,24 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeView, setActiveView] = useState<'config' | 'groups'>('config');
   const [error, setError] = useState<string | null>(null);
+  const [lastGroupSize, setLastGroupSize] = useState<number>(4);
 
-  const generateGroups = useCallback(async () => {
+  const generateGroups = useCallback(async (size: number = 4) => {
     setIsGenerating(true);
     setError(null);
+    setLastGroupSize(size);
     
     // Simular delay para mostrar loading
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const generator = new GroupGenerator(students, constraints);
+    const generator = new GroupGenerator(students, constraints, size);
     const result = generator.generateGroups();
     
     if (result) {
       setGroups(result);
       setActiveView('groups');
     } else {
-      setError('No se pudieron generar grupos que cumplan todas las restricciones. Intenta ajustar las configuraciones.');
+      setError(`No se pudieron generar grupos de ${size} que cumplan todas las restricciones. Intenta ajustar las configuraciones.`);
     }
     
     setIsGenerating(false);
@@ -122,22 +124,36 @@ function App() {
           </div>
         </div>
 
-        {/* Generate Button */}
+        {/* Generate Buttons */}
         {activeView === 'config' && (
-          <div className="text-center mb-8">
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
             <button
-              onClick={generateGroups}
+              onClick={() => generateGroups(4)}
               disabled={isGenerating}
-              className={`px-8 py-4 bg-green-600 text-white rounded-xl font-medium text-lg shadow-lg hover:bg-green-700 transition-all flex items-center gap-3 mx-auto ${
+              className={`px-8 py-4 bg-green-600 text-white rounded-xl font-medium text-lg shadow-lg hover:bg-green-700 transition-all flex items-center gap-3 ${
                 isGenerating ? 'opacity-75 cursor-not-allowed' : ''
               }`}
             >
-              {isGenerating ? (
+              {isGenerating && lastGroupSize === 4 ? (
                 <RefreshCw className="w-5 h-5 animate-spin" />
               ) : (
                 <Play className="w-5 h-5" />
               )}
-              {isGenerating ? 'Generando...' : 'Generar Grupos'}
+              {isGenerating && lastGroupSize === 4 ? 'Generando...' : 'Generar Grupos (4)'}
+            </button>
+            <button
+              onClick={() => generateGroups(2)}
+              disabled={isGenerating}
+              className={`px-8 py-4 bg-blue-600 text-white rounded-xl font-medium text-lg shadow-lg hover:bg-blue-700 transition-all flex items-center gap-3 ${
+                isGenerating ? 'opacity-75 cursor-not-allowed' : ''
+              }`}
+            >
+              {isGenerating && lastGroupSize === 2 ? (
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              ) : (
+                <Users className="w-5 h-5" />
+              )}
+              {isGenerating && lastGroupSize === 2 ? 'Generando...' : 'Generar Parejas (2)'}
             </button>
           </div>
         )}
@@ -171,10 +187,12 @@ function App() {
         {activeView === 'groups' && groups && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-800">Grupos Generados</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                {lastGroupSize === 2 ? 'Parejas Generadas' : 'Grupos Generados'}
+              </h2>
               <div className="flex gap-3">
                 <button
-                  onClick={generateGroups}
+                  onClick={() => generateGroups(lastGroupSize)}
                   disabled={isGenerating}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
                 >
@@ -204,7 +222,9 @@ function App() {
                   <div className="text-2xl font-bold text-blue-600">
                     {groups.filter(g => g.students.some(s => s.isLeader)).length}
                   </div>
-                  <div className="text-sm text-gray-600">Grupos con Líder</div>
+                  <div className="text-sm text-gray-600">
+                    {lastGroupSize === 2 ? 'Parejas con Líder' : 'Grupos con Líder'}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
@@ -223,7 +243,7 @@ function App() {
                         const boys = g.students.filter(s => s.gender === 'male').length;
                         const girls = g.students.filter(s => s.gender === 'female').length;
                         return acc + Math.abs(boys - girls);
-                      }, 0) / 6 * 10
+                      }, 0) / groups.length * 10
                     ) / 10}
                   </div>
                   <div className="text-sm text-gray-600">Promedio Desequilibrio Género</div>
