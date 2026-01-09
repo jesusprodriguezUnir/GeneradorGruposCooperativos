@@ -7,15 +7,15 @@
 - **Base de Datos (Pendiente)**: Supabase (instalado pero no configurado para persistencia).
 
 ## Arquitectura y Flujo de Datos
-- **Lógica de Generación**: Centralizada en [src/utils/groupGenerator.ts](src/utils/groupGenerator.ts). Utiliza un algoritmo iterativo (máx 1000 intentos) para encontrar una combinación que satisfaga todas las restricciones activas.
-- **Estado de la Aplicación**: Gestionado localmente en [src/App.tsx](src/App.tsx).
+- **Lógica de Generación**: Centralizada en [src/utils/groupGenerator.ts](/src/utils/groupGenerator.ts). Utiliza un algoritmo iterativo (máx 1000 intentos) para encontrar una combinación que satisfaga todas las restricciones activas.
+- **Estado de la Aplicación**: Gestionado localmente en [src/App.tsx](/src/App.tsx).
 - **Persistencia Actual**: Exportación/Importación manual mediante archivos JSON.
-- **Tipos Globales**: Definidos en [src/types/index.ts](src/types/index.ts).
+- **Tipos Globales**: Definidos en [src/types/index.ts](/src/types/index.ts).
 
 ## Convenciones de Desarrollo
-- **Tamaño de Grupos**: Dinámico. Por defecto es de 4 o parejas de 2. El sistema calcula el número de grupos necesario automáticamente.
+- **Tamaño de Grupos**: Dinámico. El tamaño de grupo puede ser de 4 estudiantes o parejas de 2 estudiantes, seleccionado por el usuario al momento de generar los grupos. El sistema calcula el número de grupos necesario automáticamente.
 - **Restricciones**: Las restricciones se evalúan mediante `checkConstraint` en el generador. Cada restricción tiene un `type` que mapea a una lógica específica.
-- **Componentes**: Estilos con Tailwind de forma inline. Uso intensivo de gradientes y animaciones personalizadas (definidas en [src/index.css](src/index.css)).
+- **Componentes**: Estilos con Tailwind de forma inline. Uso intensivo de gradientes y animaciones personalizadas (definidas en [src/index.css](/src/index.css)).
 
 ## Comandos Críticos
 - `npm run dev`: Iniciar entorno de desarrollo.

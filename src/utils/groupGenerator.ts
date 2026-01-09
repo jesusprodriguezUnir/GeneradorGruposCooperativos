@@ -11,7 +11,20 @@ export class GroupGenerator {
     this.students = students;
     this.constraints = constraints.filter(c => c.enabled);
     this.leaders = students.filter(s => s.isLeader);
-    this.groupSize = groupSize;
+    
+    // Validate and normalize groupSize to avoid invalid values (0, negative, non-integer, or > number of students)
+    const totalStudents = this.students.length;
+    let normalizedGroupSize = Number.isFinite(groupSize) ? Math.floor(groupSize) : 4;
+
+    if (normalizedGroupSize < 1) {
+      // Ensure at least one student per group when there are students; default to 1 otherwise
+      normalizedGroupSize = totalStudents > 0 ? Math.min(4, totalStudents) : 1;
+    } else if (totalStudents > 0 && normalizedGroupSize > totalStudents) {
+      // Do not allow groupSize to exceed the total number of students
+      normalizedGroupSize = totalStudents;
+    }
+
+    this.groupSize = normalizedGroupSize;
   }
 
   generateGroups(): Group[] | null {
@@ -34,6 +47,9 @@ export class GroupGenerator {
     }));
 
     // Paso 1: Asignar líderes a cada grupo
+    // Nota: Si hay más grupos que líderes disponibles, solo los primeros grupos tendrán líder.
+    // Por ejemplo, con 24 estudiantes y groupSize=2, habrá 12 grupos pero solo 6 líderes,
+    // lo que resultará en que solo la mitad de los grupos tengan líder asignado.
     const shuffledLeaders = [...this.leaders].sort(() => Math.random() - 0.5);
     shuffledLeaders.forEach((leader, index) => {
       if (index < numGroups) {
@@ -160,8 +176,9 @@ export class GroupGenerator {
   }
 
   private validateGroups(groups: Group[]): boolean {
-    // Verificar que todos los grupos tengan el tamaño correcto (o menos si no es divisible)
     const totalStudents = this.students.length;
+    
+    // Verificar que todos los grupos tengan el tamaño correcto (o menos si no es divisible)
     const expectedStudentsPerGroup = this.groupSize;
     
     if (groups.some(g => g.students.length > expectedStudentsPerGroup)) {
@@ -171,6 +188,19 @@ export class GroupGenerator {
     // Verificar que se hayan asignado todos los estudiantes
     const assignedCount = groups.reduce((acc, g) => acc + g.students.length, 0);
     if (assignedCount !== totalStudents) {
+      return false;
+    }
+
+    // Verificar que los grupos tengan tamaños balanceados:
+    // cada grupo debe tener un tamaño entre floor(total / #grupos) y ceil(total / #grupos),
+    // de forma que la diferencia máxima entre grupos sea de 1 estudiante.
+    if (groups.length === 0) {
+      // Si no hay grupos, solo es válido si tampoco hay estudiantes.
+      return totalStudents === 0;
+    }
+    const minGroupSize = Math.floor(totalStudents / groups.length);
+    const maxGroupSize = Math.ceil(totalStudents / groups.length);
+    if (groups.some(g => g.students.length < minGroupSize || g.students.length > maxGroupSize)) {
       return false;
     }
 
