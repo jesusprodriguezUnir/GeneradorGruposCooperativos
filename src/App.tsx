@@ -222,7 +222,9 @@ function App() {
                   <div className="text-2xl font-bold text-blue-600">
                     {groups.filter(g => g.students.some(s => s.isLeader)).length}
                   </div>
-                  <div className="text-sm text-gray-600">Grupos con Líder</div>
+                  <div className="text-sm text-gray-600">
+                    {lastGroupSize === 2 ? 'Parejas con Líder' : 'Grupos con Líder'}
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-green-600">
